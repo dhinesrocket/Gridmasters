@@ -4,11 +4,11 @@ permissions:
 
 on:
   push:
-    tags-ignore:
-      - '*-prod'
+    branches:
+      - '**'
   pull_request:
-    tags-ignore:
-      - '*-prod'
+    branches:
+      - '**'
 
 jobs:
   test:
