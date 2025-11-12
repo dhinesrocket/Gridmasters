@@ -1,0 +1,11 @@
+# .pylintrc
+[MASTER]
+ignore=venv,tests
+jobs=0
+
+[MESSAGES CONTROL]
+disable=
+    C0114,C0115,C0116  # docstrings
+
+[FORMAT]
+max-line-length=110
