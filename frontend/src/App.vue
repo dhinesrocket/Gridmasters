@@ -30,6 +30,16 @@
         </pre>
         
         <div class="game-mode-select" v-if="!gameStarted">
+          <div class="api-key-input">
+            <p class="terminal-text">&gt; ENTER OPENAI API KEY (for AI hints):</p>
+            <input 
+              v-model="apiKey" 
+              type="password" 
+              placeholder="sk-proj-..." 
+              class="api-key-field"
+            />
+          </div>
+          
           <p class="terminal-text">&gt; SELECT GAME MODE:</p>
           <div class="menu-options">
             <button @click="startGame('standard')" class="menu-btn">
@@ -117,8 +127,8 @@
 <script>
 import { ref, reactive } from 'vue'
 import GameBoard from './components/GameBoard.vue'
-import { sudokuApi } from './services/api'
-import { hideCells, validateBoard, getHint, isBoardComplete } from './utils/sudokuUtils'
+import { sudokuApi, getHint } from './services/api'
+import { hideCells, validateBoard, isBoardComplete } from './utils/sudokuUtils'
 
 export default {
   name: 'App',
@@ -135,6 +145,7 @@ export default {
     const message = ref('')
     const messageType = ref('info')
     const showCredits = ref(false)
+    const apiKey = ref('')
     
     const startGame = (mode) => {
       gameMode.value = mode
@@ -223,14 +234,20 @@ export default {
       }
     }
     
-    const getHintLocal = () => {
+    const getHintLocal = async () => {
+      if (!apiKey.value) {
+        message.value = '⚠️ Please enter your OpenAI API key first!'
+        messageType.value = 'error'
+        return
+      }
+      
       loading.value = true
       message.value = 'Generating hint...'
       messageType.value = 'info'
       
       try {
         // Get hint from stored solution
-        const hint = getHint(puzzle.value, solution.value, gameMode.value)
+        const hint = await getHint(puzzle.value, solution.value, gameMode.value, apiKey.value)
         
         if (hint.row === -1) {
           message.value = `💡 ${hint.message}`
@@ -268,6 +285,7 @@ export default {
       message,
       messageType,
       showCredits,
+      apiKey,
       startGame,
       loadPuzzle,
       updateCell,
@@ -411,6 +429,35 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.api-key-input {
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+}
+
+.api-key-field {
+  width: 100%;
+  padding: 12px 15px;
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  margin-top: 10px;
+  outline: none;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.api-key-field::placeholder {
+  color: rgba(0, 255, 0, 0.4);
+}
+
+.api-key-field:focus {
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
 }
 
 .terminal-text {

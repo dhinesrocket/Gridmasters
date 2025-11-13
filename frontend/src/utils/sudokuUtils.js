@@ -117,40 +117,6 @@ export function isBoardComplete(board, gameMode) {
 }
 
 /**
- * Get a hint by finding the first empty cell and revealing its value
- * @param {Array} userBoard - Current user's board
- * @param {Array} solution - Complete solution
- * @param {string} gameMode - 'standard' or 'hex'
- * @returns {Object} Hint object with row, col, value, and message
- */
-export function getHint(userBoard, solution, gameMode) {
-  const emptyValue = -1  // Use -1 for empty cells
-  
-  // Find first empty cell
-  for (let row = 0; row < userBoard.length; row++) {
-    for (let col = 0; col < userBoard[row].length; col++) {
-      if (userBoard[row][col] === emptyValue) {
-        const value = solution[row][col]
-        return {
-          row,
-          col,
-          value,
-          message: `Cell at row ${row + 1}, column ${col + 1} should be ${value}`
-        }
-      }
-    }
-  }
-  
-  // No empty cells found
-  return {
-    row: -1,
-    col: -1,
-    value: null,
-    message: 'No hints available - all cells are filled!'
-  }
-}
-
-/**
  * Get valid numbers for a specific cell (for advanced hints)
  * @param {Array} board - Current board
  * @param {number} row - Row index

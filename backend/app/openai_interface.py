@@ -6,15 +6,15 @@ from openai import OpenAI
 
 # Initialize the OpenAI client
 # Make sure to set your OPENAI_API_KEY environment variable
-client = OpenAI()
+client = OpenAI(api_key="")
 
-def make_llm_call(prompt: str, model: str = "gpt-3.5-turbo"):
+def make_llm_call(prompt: str, model: str = "gpt-4o") :
     """
     Make a call to OpenAI's API and return the response with token usage.
     
     Args:
         prompt: The user prompt to send
-        model: The model to use (default: gpt-3.5-turbo)
+        model: The model to use (default: gpt-4o)
     
     Returns:
         dict: Contains 'response' and 'usage' information
@@ -35,7 +35,7 @@ def make_llm_call(prompt: str, model: str = "gpt-3.5-turbo"):
         usage = response.usage
         
         return {
-            "response": message,
+            "message": message,
             "usage": {
                 "prompt_tokens": usage.prompt_tokens,
                 "completion_tokens": usage.completion_tokens,
