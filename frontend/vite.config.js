@@ -17,10 +17,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    pool: 'forks',
+    pool: 'vmThreads',
     poolOptions: {
-      forks: {
-        singleFork: true
+      vmThreads: {
+        singleThread: true
       }
     }
   }

@@ -93,7 +93,8 @@ class SudokuValidator:
                         if len(valid_nums) == 1:
                             hint = f"Cell at row {r+1}, column {c+1} can only be {valid_nums[0]}"
                         else:
-                            hint = f"Cell at row {r+1}, column {c+1} can be one of: {', '.join(map(str, valid_nums))}"
+                            valid_str = ', '.join(map(str, valid_nums))
+                            hint = f"Cell at row {r+1}, column {c+1} can be one of: {valid_str}"
                         return hint, cell_index
 
         return "No hints available", -1
@@ -147,7 +148,7 @@ class HexSudokuValidator(SudokuValidator):
         for row in board:
             numeric_row = []
             for cell in row:
-                if cell == '0' or cell == 0:
+                if cell in ('0', 0):
                     numeric_row.append(0)
                 else:
                     numeric_row.append(int(str(cell), 16))

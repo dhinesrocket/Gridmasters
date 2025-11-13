@@ -1,7 +1,6 @@
 """
 Extended tests for Sudoku generator functionality.
 """
-import pytest
 from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
 
 
@@ -20,11 +19,11 @@ class TestSudokuGeneratorExtended:
         gen = SudokuGenerator()
         for difficulty in ['easy', 'medium', 'hard']:
             solution = gen.generate_puzzle(difficulty)
-            
+
             # Verify no zeros (empty cells)
             for row in solution:
                 assert 0 not in row
-            
+
             # Verify all cells have values 1-9
             for row in solution:
                 for cell in row:
@@ -62,7 +61,7 @@ class TestHexSudokuGeneratorExtended:
         for row in solution:
             for cell in row:
                 assert cell in '0123456789ABCDEF'
-        
+
         # Verify solution has correct dimensions
         assert len(solution) == 16
         for row in solution:

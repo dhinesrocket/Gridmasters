@@ -1,4 +1,4 @@
-﻿import traceback
+import traceback
 from flask import Blueprint, request, jsonify, current_app
 from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
 

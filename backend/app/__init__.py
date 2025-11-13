@@ -1,4 +1,4 @@
-﻿import os
+import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
@@ -24,7 +24,7 @@ def create_app():
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
         app.logger.info('Gridmasters startup')
-    # Register routes
-    from . import routes
+    # Register routes (import here to avoid circular import issues)
+    from . import routes  # pylint: disable=import-outside-toplevel
     app.register_blueprint(routes.bp)
     return app

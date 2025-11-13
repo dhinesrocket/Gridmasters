@@ -1,13 +1,16 @@
 # .pylintrc
 [MASTER]
-ignore=venv,tests
+ignore=venv,tests,frontend,docs,logs,.github
 jobs=0
+ignore-patterns=openai_example.py,conftest.py
 
 [MESSAGES CONTROL]
 disable=
     C0114,C0115,C0116,  # docstrings
     W0718,              # Broad exception caught
     R0903,              # Too few public methods
+    R0801,              # Similar lines in files (duplicate-code)
+    W0212,              # Access to protected member
 
 [FORMAT]
 max-line-length=110

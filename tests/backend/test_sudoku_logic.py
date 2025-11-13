@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
 from app.sudoku_validator import SudokuValidator, HexSudokuValidator
 

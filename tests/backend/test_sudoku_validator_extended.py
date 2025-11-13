@@ -75,7 +75,6 @@ class TestHexSudokuValidatorExtended:
 
     def test_hex_validator_valid_chars(self):
         """Test that hex validator accepts valid hex characters."""
-        puzzle = [['0']*16 for _ in range(16)]
         validator = HexSudokuValidator()
         assert validator.size == 16
         assert validator.box_size == 4

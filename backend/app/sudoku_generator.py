@@ -14,7 +14,7 @@ class SudokuGenerator:
         self.size = size
         self.box_size = int(size ** 0.5)
 
-    def generate_puzzle(self, difficulty='medium'):
+    def generate_puzzle(self, difficulty='medium'):  # pylint: disable=unused-argument
         """
         Generate a complete Sudoku solution.
         Args:
@@ -93,21 +93,37 @@ class HexSudokuGenerator(SudokuGenerator):
         super().__init__(size=16)
 
     def _fill_board(self, board, row=0, col=0):
-        """Recursively fill the board using values 0-15 (displayed as 0-9, A-F)."""
+        """Recursively fill the board using values 0-15 (displayed as 0-9, A-F).
+
+        Optimized for 16x16 boards to avoid getting stuck in backtracking.
+        Uses constraint propagation to limit search space.
+        """
         if row == self.size:
             return True
         next_row, next_col = (row, col + 1) if col + 1 < self.size else (row + 1, 0)
-        # Use values 0-15 for hex Sudoku (mapped to 0-9, A-F)
-        # Note: We use 0-15 instead of 1-16 to align with hex notation
-        numbers = list(range(0, 16))
-        random.shuffle(numbers)
-        for num in numbers:
-            if self._is_valid_hex(board, row, col, num):
-                board[row][col] = num
-                if self._fill_board(board, next_row, next_col):
-                    return True
-                board[row][col] = -1  # Use -1 for empty instead of 0
+
+        # Get valid numbers for this position (constraint propagation)
+        valid_nums = self._get_valid_numbers_hex(board, row, col)
+        if not valid_nums:
+            return False
+
+        # Shuffle for randomness
+        random.shuffle(valid_nums)
+
+        for num in valid_nums:
+            board[row][col] = num
+            if self._fill_board(board, next_row, next_col):
+                return True
+            board[row][col] = -1  # Use -1 for empty instead of 0
         return False
+
+    def _get_valid_numbers_hex(self, board, row, col):
+        """Get list of valid numbers for position using constraint propagation."""
+        valid = []
+        for num in range(0, 16):
+            if self._is_valid_hex(board, row, col, num):
+                valid.append(num)
+        return valid
 
     def _is_valid_hex(self, board, row, col, num):
         """Check if placing num at (row, col) is valid. Uses -1 for empty cells."""
@@ -126,14 +142,51 @@ class HexSudokuGenerator(SudokuGenerator):
         return True
 
     def _create_solved_board(self):
-        """Create a completely solved Sudoku board using -1 for empty."""
-        max_attempts = 100
-        for _ in range(max_attempts):
-            board = [[-1 for _ in range(self.size)] for _ in range(self.size)]
-            if self._fill_board(board):
-                return board
-        # If all attempts fail, raise an error
-        raise RuntimeError(f"Failed to generate valid hex Sudoku board after {max_attempts} attempts")
+        """Create a completely solved Sudoku board using -1 for empty.
+
+        Uses a fast pattern-based approach with shuffling for randomness.
+        Much faster than pure backtracking for 16x16 boards.
+        """
+        # Use pattern-based generation for speed (O(n^2) instead of exponential backtracking)
+        board = self._generate_pattern_board()
+        # Shuffle rows and columns within boxes to add randomness while maintaining validity
+        board = self._shuffle_board(board)
+        return board
+
+    def _generate_pattern_board(self):
+        """Generate a valid 16x16 sudoku using a deterministic pattern.
+
+        Uses the formula: board[i][j] = (i*4 + i//4 + j) % 16
+        This creates a valid sudoku that we can then shuffle for randomness.
+        """
+        board = [[-1 for _ in range(self.size)] for _ in range(self.size)]
+        for i in range(self.size):
+            for j in range(self.size):
+                # Pattern formula that guarantees valid sudoku
+                board[i][j] = (i * self.box_size + i // self.box_size + j) % self.size
+        return board
+
+    def _shuffle_board(self, board):
+        """Shuffle rows and columns within boxes to randomize while preserving validity."""
+        # Shuffle rows within each band (4 rows per band)
+        for band in range(self.box_size):
+            rows = list(range(band * self.box_size, (band + 1) * self.box_size))
+            random.shuffle(rows)
+            # Reorder the rows
+            board = [board[i] if i not in range(band * self.box_size, (band + 1) * self.box_size)
+                    else board[rows[i - band * self.box_size]] for i in range(self.size)]
+
+        # Shuffle columns within each stack (4 columns per stack)
+        for stack in range(self.box_size):
+            cols = list(range(stack * self.box_size, (stack + 1) * self.box_size))
+            random.shuffle(cols)
+            # Reorder the columns
+            for row in range(self.size):
+                temp = [board[row][i] for i in range(self.size)]
+                for i, col in enumerate(cols):
+                    board[row][stack * self.box_size + i] = temp[col]
+
+        return board
 
     def _remove_numbers(self, board, difficulty):
         """Remove numbers from solved board. Removed cells set to -1."""

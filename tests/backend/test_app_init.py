@@ -32,15 +32,15 @@ class TestAppCreation:
         """Test that routes are registered."""
         app = create_app()
         client = app.test_client()
-        
+
         # Test health endpoint exists
         response = client.get('/health')
         assert response.status_code == 200
-        
+
         # Test sudoku endpoint exists
         response = client.get('/sudoku_puzzle')
         assert response.status_code == 200
-        
+
         # Test hex sudoku endpoint exists
         response = client.get('/hex_sudoku_puzzle')
         assert response.status_code == 200
@@ -49,13 +49,13 @@ class TestAppCreation:
         """Test logging setup when not in debug mode."""
         # Change to temp directory for log files
         monkeypatch.chdir(tmp_path)
-        
+
         # Set environment to production
         monkeypatch.delenv('PYTEST_CURRENT_TEST', raising=False)
-        
+
         app = create_app()
         app.config['TESTING'] = False
-        
+
         # In test environment, logging won't create files
         # Just verify app was created successfully
         assert app is not None
@@ -64,7 +64,7 @@ class TestAppCreation:
         """Test secret key can be set from environment."""
         test_secret = 'test-secret-key-123'
         monkeypatch.setenv('SECRET_KEY', test_secret)
-        
+
         app = create_app()
         assert app.config['SECRET_KEY'] == test_secret
 
@@ -76,13 +76,13 @@ class TestAppLogging:
         """Test that logs directory is created if it doesn't exist."""
         # Change to temp directory
         monkeypatch.chdir(tmp_path)
-        
+
         # Remove PYTEST_CURRENT_TEST to enable logging
         monkeypatch.delenv('PYTEST_CURRENT_TEST', raising=False)
-        
+
         app = create_app()
         app.config['DEBUG'] = False
         app.config['TESTING'] = False
-        
+
         # Logger should be configured
         assert app.logger is not None

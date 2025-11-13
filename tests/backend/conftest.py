@@ -1,4 +1,4 @@
-﻿"""
+"""
 Test configuration and fixtures.
 """
 import sys

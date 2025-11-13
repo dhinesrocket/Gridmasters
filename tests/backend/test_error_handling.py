@@ -1,8 +1,10 @@
 """
 Tests for error handling in routes.
 """
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
 
 
@@ -87,7 +89,7 @@ class TestGeneratorEdgeCases:
     def test_sudoku_generator_max_retries_exceeded(self):
         """Test generator raises error when max retries exceeded."""
         gen = SudokuGenerator()
-        
+
         # Mock _fill_board to always fail
         with patch.object(gen, '_fill_board', return_value=False):
             with pytest.raises(RuntimeError) as exc_info:
@@ -95,11 +97,12 @@ class TestGeneratorEdgeCases:
             assert 'Failed to generate' in str(exc_info.value)
 
     def test_hex_sudoku_generator_max_retries_exceeded(self):
-        """Test hex generator raises error when max retries exceeded."""
+        """Test hex generator error handling (pattern generation always succeeds)."""
         gen = HexSudokuGenerator()
-        
-        # Mock _fill_board to always fail
-        with patch.object(gen, '_fill_board', return_value=False):
-            with pytest.raises(RuntimeError) as exc_info:
-                gen._create_solved_board()
-            assert 'Failed to generate' in str(exc_info.value)
+
+        # Pattern-based generation always succeeds, so this test verifies
+        # that the generator can successfully create boards
+        board = gen._create_solved_board()
+        assert board is not None
+        assert len(board) == 16
+        assert all(len(row) == 16 for row in board)

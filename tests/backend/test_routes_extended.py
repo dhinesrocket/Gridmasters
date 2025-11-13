@@ -1,7 +1,6 @@
 """
 Extended tests for API routes.
 """
-import pytest
 import json
 
 

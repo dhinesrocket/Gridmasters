@@ -1,5 +1,5 @@
-﻿import json
-import pytest
+import json
+
 
 class TestSudokuPuzzleEndpoint:
     """Test GET /sudoku_puzzle endpoint."""
@@ -12,7 +12,7 @@ class TestSudokuPuzzleEndpoint:
         assert 'solution' in data
         assert 'difficulty' in data
         assert data['size'] == 9
-        
+
         # Verify it's a complete solution (no zeros)
         solution = data['solution']
         for row in solution:
@@ -26,7 +26,7 @@ class TestSudokuPuzzleEndpoint:
             assert response.status_code == 200
             data = json.loads(response.data)
             assert data['difficulty'] == difficulty
-            
+
             # Verify complete solution
             solution = data['solution']
             assert len(solution) == 9
@@ -50,7 +50,7 @@ class TestHexSudokuPuzzleEndpoint:
         data = json.loads(response.data)
         assert 'solution' in data
         assert data['size'] == 16
-        
+
         # Verify it's a complete solution (all hex values 0-F)
         solution = data['solution']
         assert len(solution) == 16
