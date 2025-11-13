@@ -50,6 +50,8 @@ htmlcov/
 coverage.xml
 *.cover
 .hypothesis/
+pytest-results.xml
+.vitest/
 
 # IDEs
 .vscode/

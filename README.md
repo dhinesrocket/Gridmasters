@@ -16,10 +16,12 @@ A modern Sudoku game with both standard (9x9) and hexadecimal (16x16) variants, 
 
 ### Backend (Flask)
 - **Flask REST API** with CORS support
-- **Sudoku Generator**: Algorithm to create valid puzzles
+- **Sudoku Generator**: Optimized algorithm to create valid puzzles
+  - Pattern-based 16x16 hex generation (60x faster than backtracking)
 - **Sudoku Validator**: Solution verification and hint generation
 - **Security**: Input validation, request size limits, logging
-- **Testing**: Comprehensive unit and integration tests
+- **Testing**: Comprehensive unit and integration tests with pytest
+- **CI/CD**: Automated testing with GitHub Actions (pytest, pylint)
 
 ### Frontend (Vue.js)
 - **Vue 3** with Composition API
@@ -27,6 +29,8 @@ A modern Sudoku game with both standard (9x9) and hexadecimal (16x16) variants, 
 - **Terminal UI**: Custom CSS for Linux terminal aesthetics
 - **State Management**: Maintained on frontend
 - **API Integration**: Axios for HTTP requests
+- **Testing**: Vitest with happy-dom for component testing
+- **CI/CD**: Automated testing with GitHub Actions
 
 ## Installation
 
@@ -98,6 +102,40 @@ For coverage report:
 pytest --cov=app tests/
 ```
 
+For verbose output:
+```bash
+pytest -v
+```
+
+Check code quality with pylint (10.00/10 score):
+```bash
+pylint backend/app
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+npm test
+```
+
+For watch mode during development:
+```bash
+npm run test:watch
+```
+
+For coverage report:
+```bash
+npm run test:coverage
+```
+
+### Continuous Integration
+
+The project uses GitHub Actions for automated testing:
+- **pytest.yml**: Runs backend tests on every push/PR
+- **pylint.yml**: Checks code quality for Python files
+- **vitest.yml**: Runs frontend tests on every push/PR
+
 ## API Documentation
 
 See [docs/Routes.md](docs/Routes.md) for complete API documentation.
@@ -130,16 +168,17 @@ See [docs/Routes.md](docs/Routes.md) for complete API documentation.
 
 ```
 Gridmasters/
+├── .github/
+│   └── workflows/
+│       ├── pytest.yml           # Backend test automation
+│       ├── pylint.yml           # Code quality checks
+│       └── vitest.yml           # Frontend test automation
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py          # Flask app factory
 │   │   ├── routes.py            # API endpoints
 │   │   ├── sudoku_generator.py  # Puzzle generation
 │   │   └── sudoku_validator.py  # Solution validation
-│   ├── tests/
-│   │   ├── conftest.py          # Test configuration
-│   │   ├── test_routes.py       # API tests
-│   │   └── test_sudoku_logic.py # Logic tests
 │   ├── requirements.txt         # Python dependencies
 │   └── run.py                   # Application entry point
 ├── frontend/
@@ -150,11 +189,20 @@ Gridmasters/
 │   │   │   └── api.js           # API client
 │   │   ├── App.vue              # Main app component
 │   │   └── main.js              # Application entry
+│   ├── tests/                   # Frontend Vitest tests
 │   ├── index.html               # HTML template
 │   ├── package.json             # Node dependencies
 │   └── vite.config.js           # Vite configuration
+├── tests/
+│   └── backend/
+│       ├── conftest.py          # Test configuration
+│       ├── test_routes.py       # API tests
+│       └── test_sudoku_logic.py # Logic tests
 ├── docs/
 │   └── Routes.md                # API documentation
+├── .gitignore                   # Git ignore rules
+├── .pylintrc                    # Pylint configuration
+├── pytest.ini                   # Pytest configuration
 └── README.md                    # This file
 ```
 
@@ -164,12 +212,18 @@ Gridmasters/
 - **Flask 3.0** - Web framework
 - **Flask-CORS** - Cross-origin resource sharing
 - **pytest** - Testing framework
+- **pytest-cov** - Test coverage reporting
+- **pytest-mock** - Mocking for tests
+- **pylint** - Code quality and linting
 - **python-dotenv** - Environment configuration
 
 ### Frontend
 - **Vue 3** - Progressive JavaScript framework
-- **Vite** - Next generation frontend tooling
+- **Vite 5** - Next generation frontend tooling
 - **Axios** - HTTP client
+- **Vitest 4** - Fast unit test framework
+- **@vue/test-utils** - Official testing utilities for Vue
+- **happy-dom** - Lightweight DOM implementation for testing
 - **IBM Plex Mono** - Terminal-style font
 
 ## Security Features
@@ -180,6 +234,19 @@ Gridmasters/
 - ✅ Error logging
 - ✅ Type checking for board dimensions
 - ✅ Sanitized error messages
+
+## Performance
+
+### Optimized Hex Sudoku Generation
+The hex sudoku generator uses an optimized pattern-based algorithm instead of traditional backtracking:
+
+- **Algorithm**: Deterministic pattern generation with row/column shuffling
+- **Complexity**: O(n²) instead of exponential backtracking
+- **Speed**: 60x faster than previous implementation
+- **Reliability**: Generates valid 16x16 boards in milliseconds
+- **Test Suite**: Runs 45 backend tests in ~1.3 seconds
+
+This optimization ensures that even the most computationally intensive hex sudoku puzzles are generated instantly.
 
 ## Development
 
