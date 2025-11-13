@@ -3,19 +3,23 @@
     <div class="terminal-header">
       <span class="terminal-title">GRIDMASTERS v1.0.0</span>
       <span class="terminal-buttons">
-        <span class="btn-minimize">_</span>
-        <span class="btn-maximize">□</span>
-        <span class="btn-close">×</span>
+        <span class="btn-minimize" @click="toggleCredits">_</span>
+        <span class="btn-maximize" @click="toggleFullscreen">□</span>
+        <span class="btn-close" @click="resetGame">×</span>
       </span>
     </div>
     
-    <div class="terminal-body">
+    <div class="terminal-body" v-if="!showCredits">
       <div class="terminal-prompt">
         <span class="prompt-user">user@gridmasters</span>:<span class="prompt-path">~</span>$ 
-        <span class="prompt-command">./sudoku</span>
+        <span class="prompt-command">./sudo-ku</span>
       </div>
       
       <div class="terminal-output">
+        <div v-if="message" class="terminal-message top-message" :class="messageType">
+          <p>&gt; {{ message }}</p>
+        </div>
+        
         <pre class="ascii-art">
  ██████╗ ██████╗ ██╗██████╗ ███╗   ███╗ █████╗ ███████╗████████╗███████╗██████╗ ███████╗
 ██╔════╝ ██╔══██╗██║██╔══██╗████╗ ████║██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔══██╗██╔════╝
@@ -38,6 +42,9 @@
           
           <p class="terminal-text" v-if="gameMode">&gt; SELECT DIFFICULTY:</p>
           <div class="menu-options" v-if="gameMode">
+            <button @click="loadPuzzle('super_easy')" class="menu-btn">
+              [S] SUPER EASY (3-4 blanks)
+            </button>
             <button @click="loadPuzzle('easy')" class="menu-btn">
               [E] EASY
             </button>
@@ -61,10 +68,47 @@
           @hint="getHint"
           @reset="resetGame"
         />
+      </div>
+    </div>
+    
+    <!-- Credits Screen -->
+    <div class="terminal-body credits-screen" v-if="showCredits">
+      <div class="credits-content">
+        <pre class="ascii-art">
+ ██████╗██████╗ ███████╗██████╗ ██╗████████╗███████╗
+██╔════╝██╔══██╗██╔════╝██╔══██╗██║╚══██╔══╝██╔════╝
+██║     ██████╔╝█████╗  ██║  ██║██║   ██║   ███████╗
+██║     ██╔══██╗██╔══╝  ██║  ██║██║   ██║   ╚════██║
+╚██████╗██║  ██║███████╗██████╔╝██║   ██║   ███████║
+ ╚═════╝╚═╝  ╚═╝╚══════╝╚═════╝ ╚═╝   ╚═╝   ╚══════╝
+        </pre>
         
-        <div v-if="message" class="terminal-message" :class="messageType">
-          <p>&gt; {{ message }}</p>
+        <div class="credits-section">
+          <p class="credits-title">&gt; DEVELOPMENT TEAM</p>
+          <p class="credits-item">Backend Developer: Sebastian Canales</p>
+          <p class="credits-item">Backend Developer: Claire Oliver</p>
+          <p class="credits-item">QA / Testing: Nathanael McClure</p>
+          <p class="credits-item">UI Developer: Dillon Hines</p>
+          <p class="credits-item">UI Developer: Kassidy Wall</p>
         </div>
+        
+        <div class="credits-section">
+          <p class="credits-title">&gt; SPECIAL THANKS</p>
+          <p class="credits-item">Coffee: For keeping us awake</p>
+          <p class="credits-item">Copilot: Did literally everything</p>
+          <p class="credits-item">Sudoku: For being an awesome puzzle</p>
+        </div>
+        
+        <div class="credits-section">
+          <p class="credits-title">&gt; VERSION</p>
+          <p class="credits-item">GRIDMASTERS v1.0.0</p>
+          <p class="credits-item">Built with Vue.js + Python Flask</p>
+          <p class="credits-item">2025 GridMasters Team</p>
+        </div>
+        
+        <button @click="toggleCredits" class="menu-btn back-btn">
+          [ESC] BACK TO GAME
+        </button>
       </div>
     </div>
   </div>
@@ -74,6 +118,7 @@
 import { ref, reactive } from 'vue'
 import GameBoard from './components/GameBoard.vue'
 import { sudokuApi } from './services/api'
+import { hideCells, validateBoard, getHint, isBoardComplete } from './utils/sudokuUtils'
 
 export default {
   name: 'App',
@@ -85,28 +130,53 @@ export default {
     const gameStarted = ref(false)
     const puzzle = ref(null)
     const initialPuzzle = ref(null)
+    const solution = ref(null) // Store complete solution for validation
     const loading = ref(false)
     const message = ref('')
     const messageType = ref('info')
+    const showCredits = ref(false)
     
     const startGame = (mode) => {
       gameMode.value = mode
     }
     
+    const toggleCredits = () => {
+      showCredits.value = !showCredits.value
+    }
+    
+    const toggleFullscreen = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen()
+        }
+      }
+    }
+    
     const loadPuzzle = async (difficulty) => {
       loading.value = true
-      message.value = `Loading ${difficulty} ${gameMode.value} puzzle...`
+      message.value = 'Puzzle loading...'
       messageType.value = 'info'
+      
+      // Show "Puzzle loading..." for a few seconds
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
       try {
         const response = gameMode.value === 'standard' 
           ? await sudokuApi.getSudokuPuzzle(difficulty)
           : await sudokuApi.getHexSudokuPuzzle(difficulty)
         
-        puzzle.value = JSON.parse(JSON.stringify(response.puzzle))
-        initialPuzzle.value = JSON.parse(JSON.stringify(response.puzzle))
+        // Store the complete solution
+        solution.value = JSON.parse(JSON.stringify(response.solution))
+        
+        // Hide cells based on difficulty to create the puzzle
+        const hiddenPuzzle = hideCells(response.solution, difficulty, gameMode.value)
+        puzzle.value = JSON.parse(JSON.stringify(hiddenPuzzle))
+        initialPuzzle.value = JSON.parse(JSON.stringify(hiddenPuzzle))
+        
         gameStarted.value = true
-        message.value = 'Puzzle loaded! Fill in the empty cells (0).'
+        message.value = 'Puzzle loaded! Fill in the empty cells.'
         messageType.value = 'success'
       } catch (error) {
         message.value = `Error loading puzzle: ${error.message}`
@@ -122,17 +192,23 @@ export default {
       }
     }
     
-    const validateSolution = async () => {
+    const validateSolution = () => {
       loading.value = true
       message.value = 'Validating solution...'
       messageType.value = 'info'
       
       try {
-        const response = gameMode.value === 'standard'
-          ? await sudokuApi.validateSudokuSolution(initialPuzzle.value, puzzle.value)
-          : await sudokuApi.validateHexSudokuSolution(initialPuzzle.value, puzzle.value)
+        // Check if board is complete
+        if (!isBoardComplete(puzzle.value, gameMode.value)) {
+          message.value = '⚠️ Puzzle is not complete. Fill in all empty cells.'
+          messageType.value = 'error'
+          return
+        }
         
-        if (response.valid) {
+        // Validate against the stored solution
+        const isValid = validateBoard(puzzle.value, solution.value, gameMode.value)
+        
+        if (isValid) {
           message.value = '🎉 CONGRATULATIONS! Solution is correct!'
           messageType.value = 'success'
         } else {
@@ -147,18 +223,25 @@ export default {
       }
     }
     
-    const getHint = async () => {
+    const getHintLocal = () => {
       loading.value = true
       message.value = 'Generating hint...'
       messageType.value = 'info'
       
       try {
-        const response = gameMode.value === 'standard'
-          ? await sudokuApi.getSudokuHint(puzzle.value)
-          : await sudokuApi.getHexSudokuHint(puzzle.value)
+        // Get hint from stored solution
+        const hint = getHint(puzzle.value, solution.value, gameMode.value)
         
-        message.value = `💡 HINT: ${response.hint}`
-        messageType.value = 'hint'
+        if (hint.row === -1) {
+          message.value = `💡 ${hint.message}`
+          messageType.value = 'hint'
+        } else {
+          message.value = `💡 HINT: ${hint.message}`
+          messageType.value = 'hint'
+          
+          // Optionally reveal the cell (uncomment to auto-fill)
+          // puzzle.value[hint.row][hint.col] = hint.value
+        }
       } catch (error) {
         message.value = `Error getting hint: ${error.message}`
         messageType.value = 'error'
@@ -172,6 +255,7 @@ export default {
       gameStarted.value = false
       puzzle.value = null
       initialPuzzle.value = null
+      solution.value = null
       message.value = ''
     }
     
@@ -183,12 +267,15 @@ export default {
       loading,
       message,
       messageType,
+      showCredits,
       startGame,
       loadPuzzle,
       updateCell,
       validateSolution,
-      getHint,
-      resetGame
+      getHint: getHintLocal,
+      resetGame,
+      toggleCredits,
+      toggleFullscreen
     }
   }
 }
@@ -271,12 +358,17 @@ body {
   padding: 20px;
   overflow-y: auto;
   background: #0a0e14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .terminal-prompt {
   color: #00ff00;
   margin-bottom: 15px;
   font-size: 14px;
+  text-align: left;
+  width: 100%;
 }
 
 .prompt-user {
@@ -295,6 +387,10 @@ body {
 
 .terminal-output {
   margin-top: 10px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .ascii-art {
@@ -304,19 +400,33 @@ body {
   margin-bottom: 20px;
   text-shadow: 0 0 5px #00ff00;
   overflow-x: auto;
+  text-align: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.game-mode-select {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .terminal-text {
   color: #00ff00;
   margin: 15px 0;
   font-size: 14px;
+  text-align: center;
 }
 
 .menu-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 15px 0;
+  margin: 15px auto;
+  max-width: 400px;
+  width: 100%;
 }
 
 .menu-btn {
@@ -328,7 +438,7 @@ body {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  text-align: left;
+  text-align: center;
   letter-spacing: 1px;
 }
 
@@ -336,15 +446,18 @@ body {
   background: #00ff00;
   color: #0a0e14;
   box-shadow: 0 0 15px #00ff00;
-  transform: translateX(5px);
+  transform: scale(1.02);
 }
 
 .terminal-message {
-  margin: 20px 0;
+  margin: 20px auto;
   padding: 15px;
   border-left: 3px solid #00ff00;
   background: rgba(0, 255, 0, 0.05);
   font-size: 14px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
 }
 
 .terminal-message.success {
@@ -365,6 +478,21 @@ body {
 .terminal-message.info {
   border-left-color: #0099ff;
   color: #0099ff;
+}
+
+.terminal-message.top-message {
+  margin-bottom: 20px;
+  margin-top: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 /* Scrollbar styling */
@@ -394,5 +522,47 @@ body {
 .loading::after {
   content: '▌';
   animation: blink 1s infinite;
+}
+
+/* Credits Screen */
+.credits-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.credits-content {
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+.credits-section {
+  margin: 30px 0;
+  padding: 20px;
+  border: 1px solid #00ff00;
+  background: rgba(0, 255, 0, 0.03);
+}
+
+.credits-title {
+  color: #00ff00;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 5px #00ff00;
+}
+
+.credits-item {
+  color: #00cc00;
+  font-size: 14px;
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+.back-btn {
+  margin-top: 30px;
+  min-width: 250px;
 }
 </style>
