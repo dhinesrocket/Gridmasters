@@ -1,6 +1,6 @@
 ﻿import pytest
-from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
-from app.sudoku_validator import SudokuValidator, HexSudokuValidator
+from backend.app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
+from backend.app.sudoku_validator import SudokuValidator, HexSudokuValidator
 
 
 class TestSudokuGenerator:
