@@ -41,6 +41,6 @@ jobs:
       - name: Run tests
         shell: pwsh
         env:
-          PYTHONPATH: ${{ env.PYTHONPATH }};${{ github.workspace }}
+          PYTHONPATH: ${{ github.workspace }};${{ github.workspace }}\backend
         run: |
-          pytest -v --cov --junitxml=pytest-results.xml
+          pytest tests/backend -v --cov=backend/app --cov-branch --junitxml=pytest-results.xml
