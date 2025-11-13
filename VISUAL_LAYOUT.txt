@@ -1,0 +1,168 @@
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        GRIDMASTERS APPLICATION LAYOUT                     │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│                                                                           │
+│  ╔═══════════════════════════════════════════════════════════════════╗  │
+│  ║  TERMINAL HEADER                                      _ □ ×       ║  │
+│  ╠═══════════════════════════════════════════════════════════════════╣  │
+│  ║                                                                   ║  │
+│  ║   ┌─────────────────────┐         ╔═══════════════════╗         ║  │
+│  ║   │  TERMINAL BODY       │         ║  WATER BOTTLE     ║         ║  │
+│  ║   │                      │         ║  ┌───┐            ║         ║  │
+│  ║   │  ┌────────────┐      │         ║  │   │ (cap)      ║         ║  │
+│  ║   │  │  GRIDMAS-  │      │         ║  │▓▓▓│            ║         ║  │
+│  ║   │  │  TERS LOGO │      │         ║  │▓▓▓│            ║         ║  │
+│  ║   │  └────────────┘      │         ║  │▓▓▓│ 487.3 ml   ║         ║  │
+│  ║   │                      │         ║  │▓▓▓│ 3321 tokens║         ║  │
+│  ║   │  [SELECT MODE]       │         ║  │▓▓▓│            ║         ║  │
+│  ║   │                      │         ║  │▓▓▓│            ║         ║  │
+│  ║   │  • STANDARD (9x9)    │         ║  │▓▓▓│            ║         ║  │
+│  ║   │  • HEX (16x16)       │         ║  │~~~│ (wave)     ║         ║  │
+│  ║   │                      │         ║  └───┘            ║         ║  │
+│  ║   │  OR                  │         ║                   ║         ║  │
+│  ║   │                      │         ║  ┏━━━━━━━━━━━━┓  ║         ║  │
+│  ║   │  ┌──────────────┐    │         ║  ┃ > TOKENS:  ┃  ║         ║  │
+│  ║   │  │  GAME BOARD  │    │         ║  ┃   3321     ┃  ║         ║  │
+│  ║   │  │              │    │         ║  ┃ > WATER:   ┃  ║         ║  │
+│  ║   │  │  [SUDOKU]    │    │         ║  ┃   487.3/500┃  ║         ║  │
+│  ║   │  │              │    │         ║  ┃ > BOTTLES: ┃  ║         ║  │
+│  ║   │  │              │    │         ║  ┃   0        ┃  ║         ║  │
+│  ║   │  └──────────────┘    │         ║  ┗━━━━━━━━━━━━┛  ║         ║  │
+│  ║   │                      │         ╚═══════════════════╝         ║  │
+│  ║   │  [?] HINT            │         (Fixed: top-right)            ║  │
+│  ║   │  [✓] VALIDATE        │                                       ║  │
+│  ║   │  [↻] NEW GAME        │                                       ║  │
+│  ║   └──────────────────────┘                                       ║  │
+│  ║                                                                   ║  │
+│  ║                                   ╔════════════════════════╗     ║  │
+│  ║                                   ║  EMPTY BOTTLES         ║     ║  │
+│  ║                                   ║  > EMPTY BOTTLES: 3    ║     ║  │
+│  ║                                   ║  ┌─┐ ┌─┐ ┌─┐ ┌─┐ ┌─┐  ║     ║  │
+│  ║                                   ║  │ │ │ │ │ │          ║     ║  │
+│  ║                                   ║  └─┘ └─┘ └─┘          ║     ║  │
+│  ║                                   ║                        ║     ║  │
+│  ║                                   ╚════════════════════════╝     ║  │
+│  ║                                   (Fixed: bottom-right)          ║  │
+│  ╚═══════════════════════════════════════════════════════════════════╝  │
+│                                                                           │
+└───────────────────────────────────────────────────────────────────────────┘
+
+
+COMPONENT HIERARCHY:
+====================
+
+App.vue (Root)
+├─── WaterBottle.vue (position: fixed, top-right)
+│    ├─── Bottle Visual
+│    │    ├─── Cap
+│    │    ├─── Body
+│    │    └─── Water Level (animated)
+│    └─── Stats Panel
+│         ├─── Tokens Count
+│         ├─── Water Amount
+│         └─── Bottles Consumed
+│
+├─── EmptyBottles.vue (position: fixed, bottom-right)
+│    ├─── Header (count display)
+│    └─── Grid Container
+│         ├─── Empty Bottle 1
+│         ├─── Empty Bottle 2
+│         ├─── Empty Bottle N
+│         └─── Overflow Indicator (+N)
+│
+└─── Terminal Container
+     ├─── Header (title, controls)
+     └─── Body
+          ├─── Prompt Line
+          └─── Output
+               ├─── ASCII Logo
+               ├─── Menu / Game Board
+               └─── Controls
+
+
+DATA FLOW:
+==========
+
+User Action          State Update              Visual Update
+───────────        ───────────────           ─────────────────
+                                            
+Click "GET HINT"                            WaterBottle shows
+      │                                     loading state
+      ▼                                           │
+getHintLocal()                                    ▼
+      │                                     Water level starts
+      ▼                                     at current position
+Simulate LLM Call                                 │
+(50-150 tokens)                                   ▼
+      │                                     Animation begins
+      ▼                                     (0.8s duration)
+addTokens(count)                                  │
+      │                                           ▼
+      ▼                                     Water drains to
+tokensUsed.value += count                   new level
+      │                                           │
+      ├──────────────────────────────────────────┤
+      │                                           │
+      ▼                                           ▼
+bottlesConsumed computed                    Stats panel updates
+property recalculates                       in real-time
+      │                                           │
+      ▼                                           ▼
+If new bottle filled:                       When bottle empties:
+EmptyBottles count++                        - Current bottle refills
+      │                                     - Empty bottle appears
+      ▼                                       in bottom grid
+New empty bottle appears                    - Drop animation plays
+with drop animation
+
+
+TOKEN CALCULATION FLOW:
+========================
+
+Tokens Used: 131,000
+      │
+      ▼
+Total ML = 131,000 × 0.003816 = 499.896 ml
+      │
+      ├──────────────────┬──────────────────┐
+      ▼                  ▼                  ▼
+Bottles Consumed    Current ML         Water %
+= floor(499.896/500) = 500-(499.896%500) = (0.104/500)×100
+= 0 bottles         = 0.104 ml          = 0.02%
+      │                  │                  │
+      └──────────────────┴──────────────────┘
+                         ▼
+              Display in WaterBottle:
+              - 0.104 ml shown
+              - Nearly empty visual
+              - 131,000 tokens
+              - 0 empty bottles
+
+
+STYLING THEME:
+===============
+
+Colors:
+  Primary: #00ff00 (bright green)
+  Dark BG: #0a0e14 (terminal background)
+  Accents: rgba(0, 255, 0, 0.X) (transparent green)
+
+Effects:
+  Glow: box-shadow: 0 0 Xpx rgba(0, 255, 0, 0.X)
+  Text Shadow: 0 0 Xpx rgba(0, 255, 0, 0.X)
+  Transitions: 0.3s - 0.8s ease-out
+
+Animations:
+  - Water draining (height transition)
+  - Wave movement (translateX/Y)
+  - Bottle drop (scale + translateY)
+  - Pulse effect (opacity + scale)
+  - Hover effects (transform scale)
+
+Typography:
+  Font: IBM Plex Mono (monospace)
+  Sizes: 9px - 16px
+  Weights: 400 (normal), 600 (semibold)
+  Letter-spacing: 0.5px - 2px

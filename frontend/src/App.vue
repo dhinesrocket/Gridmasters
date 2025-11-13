@@ -1,5 +1,11 @@
 <template>
   <div class="terminal-container">
+    <!-- Empty Bottles Display -->
+    <EmptyBottles 
+      :count="bottlesConsumed"
+      :maxDisplay="10"
+    />
+    
     <div class="terminal-header">
       <span class="terminal-title">GRIDMASTERS v1.0.0</span>
       <span class="terminal-buttons">
@@ -10,24 +16,44 @@
     </div>
     
     <div class="terminal-body" v-if="!showCredits">
-      <div class="terminal-prompt">
-        <span class="prompt-user">user@gridmasters</span>:<span class="prompt-path">~</span>$ 
-        <span class="prompt-command">./sudo-ku</span>
+      <div class="terminal-left">
+        <div class="terminal-prompt">
+          <span class="prompt-user">user@gridmasters</span>:<span class="prompt-path">~</span>$ 
+          <span class="prompt-command">./sudo-ku</span>
+        </div>
+        
+        <div v-if="gameStarted" class="terminal-legend">
+          <p v-if="gameMode === 'standard'">
+            &gt; Enter numbers 1-9 | Clear cell to delete
+          </p>
+          <p v-else>
+            &gt; Enter hex values 0-9, A-F | Clear cell to delete
+          </p>
+        </div>
+        
+        <div v-if="message" class="terminal-message" :class="messageType">
+          {{ message }}
+        </div>
+        
+        <!-- Water Bottle at bottom left -->
+        <WaterBottle 
+          v-if="gameStarted"
+          :tokensUsed="tokensUsed" 
+          :mlPerToken="0.003816"
+          :bottleCapacity="500"
+        />
       </div>
       
       <div class="terminal-output">
-        <div v-if="message" class="terminal-message top-message" :class="messageType">
-          <p>&gt; {{ message }}</p>
-        </div>
-        
-        <pre class="ascii-art">
+        <div class="game-content-wrapper">
+          <pre class="ascii-art">
  ██████╗ ██████╗ ██╗██████╗ ███╗   ███╗ █████╗ ███████╗████████╗███████╗██████╗ ███████╗
 ██╔════╝ ██╔══██╗██║██╔══██╗████╗ ████║██╔══██╗██╔════╝╚══██╔══╝██╔════╝██╔══██╗██╔════╝
 ██║  ███╗██████╔╝██║██║  ██║██╔████╔██║███████║███████╗   ██║   █████╗  ██████╔╝███████╗
 ██║   ██║██╔══██╗██║██║  ██║██║╚██╔╝██║██╔══██║╚════██║   ██║   ██╔══╝  ██╔══██╗╚════██║
 ╚██████╔╝██║  ██║██║██████╔╝██║ ╚═╝ ██║██║  ██║███████║   ██║   ███████╗██║  ██║███████║
  ╚═════╝ ╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚══════╝
-        </pre>
+          </pre>
         
         <div class="game-mode-select" v-if="!gameStarted">
           <p class="terminal-text">&gt; SELECT GAME MODE:</p>
@@ -68,6 +94,7 @@
           @hint="getHint"
           @reset="resetGame"
         />
+        </div>
       </div>
     </div>
     
@@ -115,15 +142,19 @@
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import GameBoard from './components/GameBoard.vue'
+import WaterBottle from './components/WaterBottle.vue'
+import EmptyBottles from './components/EmptyBottles.vue'
 import { sudokuApi } from './services/api'
 import { hideCells, validateBoard, getHint, isBoardComplete } from './utils/sudokuUtils'
 
 export default {
   name: 'App',
   components: {
-    GameBoard
+    GameBoard,
+    WaterBottle,
+    EmptyBottles
   },
   setup() {
     const gameMode = ref(null)
@@ -135,6 +166,22 @@ export default {
     const message = ref('')
     const messageType = ref('info')
     const showCredits = ref(false)
+    
+    // Token tracking state
+    const tokensUsed = ref(0)
+    const ML_PER_TOKEN = 0.003816
+    const BOTTLE_CAPACITY = 500
+    
+    // Computed property for bottles consumed
+    const bottlesConsumed = computed(() => {
+      const totalMl = tokensUsed.value * ML_PER_TOKEN
+      return Math.floor(totalMl / BOTTLE_CAPACITY)
+    })
+    
+    // Method to add tokens (will be called when LLM is integrated)
+    const addTokens = (count) => {
+      tokensUsed.value += count
+    }
     
     const startGame = (mode) => {
       gameMode.value = mode
@@ -156,7 +203,7 @@ export default {
     
     const loadPuzzle = async (difficulty) => {
       loading.value = true
-      message.value = 'Puzzle loading...'
+      message.value = 'user@gridmasters:~$ ./generate-puzzle --difficulty=' + difficulty
       messageType.value = 'info'
       
       // Show "Puzzle loading..." for a few seconds
@@ -176,10 +223,10 @@ export default {
         initialPuzzle.value = JSON.parse(JSON.stringify(hiddenPuzzle))
         
         gameStarted.value = true
-        message.value = 'Puzzle loaded! Fill in the empty cells.'
+        message.value = 'user@gridmasters:~$ ./generate-puzzle --difficulty=' + difficulty + '\nPuzzle generated successfully. Begin solving.'
         messageType.value = 'success'
       } catch (error) {
-        message.value = `Error loading puzzle: ${error.message}`
+        message.value = `user@gridmasters:~$ ./generate-puzzle --difficulty=${difficulty}\nError: ${error.message}`
         messageType.value = 'error'
       } finally {
         loading.value = false
@@ -194,13 +241,13 @@ export default {
     
     const validateSolution = () => {
       loading.value = true
-      message.value = 'Validating solution...'
+      message.value = 'user@gridmasters:~$ ./validate-solution'
       messageType.value = 'info'
       
       try {
         // Check if board is complete
         if (!isBoardComplete(puzzle.value, gameMode.value)) {
-          message.value = '⚠️ Puzzle is not complete. Fill in all empty cells.'
+          message.value = 'user@gridmasters:~$ ./validate-solution\nError: Puzzle incomplete. Fill all empty cells.'
           messageType.value = 'error'
           return
         }
@@ -209,14 +256,14 @@ export default {
         const isValid = validateBoard(puzzle.value, solution.value, gameMode.value)
         
         if (isValid) {
-          message.value = '🎉 CONGRATULATIONS! Solution is correct!'
+          message.value = 'user@gridmasters:~$ ./validate-solution\nSuccess: Solution validated. Puzzle complete!'
           messageType.value = 'success'
         } else {
-          message.value = '❌ Solution is incorrect. Keep trying!'
+          message.value = 'user@gridmasters:~$ ./validate-solution\nError: Invalid solution detected. Try again.'
           messageType.value = 'error'
         }
       } catch (error) {
-        message.value = `Error validating solution: ${error.message}`
+        message.value = `user@gridmasters:~$ ./validate-solution\nError: ${error.message}`
         messageType.value = 'error'
       } finally {
         loading.value = false
@@ -225,7 +272,7 @@ export default {
     
     const getHintLocal = () => {
       loading.value = true
-      message.value = 'Generating hint...'
+      message.value = 'user@gridmasters:~$ ./get-hint'
       messageType.value = 'info'
       
       try {
@@ -233,17 +280,30 @@ export default {
         const hint = getHint(puzzle.value, solution.value, gameMode.value)
         
         if (hint.row === -1) {
-          message.value = `💡 ${hint.message}`
+          // No valid hint available (e.g., puzzle is complete)
+          // Don't count tokens
+          message.value = `user@gridmasters:~$ ./get-hint\n${hint.message}`
           messageType.value = 'hint'
         } else {
-          message.value = `💡 HINT: ${hint.message}`
+          // Valid hint returned - count tokens
+          // TODO: When LLM is integrated, call the LLM API here and track tokens
+          // Example:
+          // const llmResponse = await callLLMApi(puzzle.value, solution.value)
+          // addTokens(llmResponse.tokensUsed)
+          
+          // For now, simulate token usage for demonstration
+          // Remove this when actual LLM integration is implemented
+          const simulatedTokens = Math.floor(Math.random() * 100) + 50 // 50-150 tokens
+          addTokens(simulatedTokens)
+          
+          message.value = `user@gridmasters:~$ ./get-hint\n${hint.message}`
           messageType.value = 'hint'
           
           // Optionally reveal the cell (uncomment to auto-fill)
           // puzzle.value[hint.row][hint.col] = hint.value
         }
       } catch (error) {
-        message.value = `Error getting hint: ${error.message}`
+        message.value = `user@gridmasters:~$ ./get-hint\nError: ${error.message}`
         messageType.value = 'error'
       } finally {
         loading.value = false
@@ -268,6 +328,8 @@ export default {
       message,
       messageType,
       showCredits,
+      tokensUsed,
+      bottlesConsumed,
       startGame,
       loadPuzzle,
       updateCell,
@@ -357,18 +419,46 @@ body {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   background: #0a0e14;
   display: flex;
+  flex-direction: row;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.terminal-left {
+  flex: 0 0 350px;
+  max-width: 350px;
+  min-width: 350px;
+  display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
+  gap: 10px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .terminal-prompt {
   color: #00ff00;
-  margin-bottom: 15px;
   font-size: 14px;
   text-align: left;
-  width: 100%;
+  white-space: nowrap;
+}
+
+.terminal-legend {
+  color: #00ff00;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+.terminal-legend p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .prompt-user {
@@ -386,11 +476,23 @@ body {
 }
 
 .terminal-output {
-  margin-top: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  min-width: 0;
+  overflow: visible;
+}
+
+.game-content-wrapper {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  min-width: 0;
 }
 
 .ascii-art {
@@ -450,44 +552,41 @@ body {
 }
 
 .terminal-message {
-  margin: 20px auto;
-  padding: 15px;
-  border-left: 3px solid #00ff00;
-  background: rgba(0, 255, 0, 0.05);
   font-size: 14px;
-  max-width: 600px;
-  width: 100%;
-  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+  text-align: left;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+.terminal-message pre {
+  margin: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .terminal-message.success {
-  border-left-color: #00ff00;
   color: #00ff00;
 }
 
 .terminal-message.error {
-  border-left-color: #ff0055;
   color: #ff0055;
 }
 
 .terminal-message.hint {
-  border-left-color: #ffaa00;
   color: #ffaa00;
 }
 
 .terminal-message.info {
-  border-left-color: #0099ff;
   color: #0099ff;
-}
-
-.terminal-message.top-message {
-  margin-bottom: 20px;
-  margin-top: 0;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
@@ -564,5 +663,18 @@ body {
 .back-btn {
   margin-top: 30px;
   min-width: 250px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .terminal-body {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .terminal-left {
+    min-width: auto;
+    width: 100%;
+  }
 }
 </style>

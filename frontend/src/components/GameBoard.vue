@@ -41,14 +41,7 @@
       </div>
     </div>
     
-    <div class="board-legend">
-      <p v-if="gameMode === 'standard'">
-        &gt; Enter numbers 1-9 | Clear cell to delete
-      </p>
-      <p v-else>
-        &gt; Enter hex values 0-9, A-F | Clear cell to delete
-      </p>
-    </div>
+    <!-- Legend moved to App.vue terminal section -->
   </div>
 </template>
 
