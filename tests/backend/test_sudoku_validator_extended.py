@@ -6,8 +6,9 @@ from app.sudoku_validator import SudokuValidator, HexSudokuValidator
 
 
 class TestSudokuValidatorExtended:
-    """Extended tests for standard Sudoku validator."""
+    """Extended tests for standard Sudoku validator - NOTE: Validation moved to frontend."""
 
+    @pytest.mark.skip(reason="Validation moved to frontend - validate_solution method no longer used")
     def test_validate_row_duplicates(self):
         """Test detection of duplicate numbers in rows."""
         puzzle = [
@@ -28,6 +29,7 @@ class TestSudokuValidatorExtended:
         is_valid = validator.validate_solution(puzzle, solution)
         assert not is_valid
 
+    @pytest.mark.skip(reason="Validation moved to frontend - validate_solution method no longer used")
     def test_validate_column_duplicates(self):
         """Test detection of duplicate numbers in columns."""
         puzzle = [[0]*9 for _ in range(9)]
@@ -47,6 +49,7 @@ class TestSudokuValidatorExtended:
         is_valid = validator.validate_solution(puzzle, solution)
         assert not is_valid
 
+    @pytest.mark.skip(reason="Validation moved to frontend - validate_solution method no longer used")
     def test_validate_box_duplicates(self):
         """Test detection of duplicate numbers in 3x3 boxes."""
         puzzle = [[0]*9 for _ in range(9)]

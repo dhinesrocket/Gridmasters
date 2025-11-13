@@ -9,15 +9,18 @@ class TestSudokuPuzzleEndpointExtended:
     """Extended tests for sudoku puzzle generation endpoint."""
 
     def test_puzzle_response_structure(self, client):
-        """Test that puzzle response has correct structure."""
+        """Test that solution response has correct structure."""
         response = client.get('/sudoku_puzzle')
         data = json.loads(response.data)
 
-        assert 'puzzle' in data
-        assert isinstance(data['puzzle'], list)
-        assert len(data['puzzle']) == 9
-        for row in data['puzzle']:
+        assert 'solution' in data
+        assert isinstance(data['solution'], list)
+        assert len(data['solution']) == 9
+        for row in data['solution']:
             assert len(row) == 9
+            # Verify it's a complete solution with no empty cells
+            for cell in row:
+                assert 1 <= cell <= 9
 
     def test_multiple_difficulty_levels(self, client):
         """Test all difficulty levels work."""

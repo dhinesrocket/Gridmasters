@@ -7,29 +7,37 @@ class TestSudokuGenerator:
     """Test standard Sudoku generator."""
 
     def test_generate_puzzle_size(self):
-        """Test that generated puzzle has correct size."""
+        """Test that generated solution has correct size."""
         gen = SudokuGenerator(size=9)
-        puzzle = gen.generate_puzzle('medium')
-        assert len(puzzle) == 9
-        assert all(len(row) == 9 for row in puzzle)
+        solution = gen.generate_puzzle('medium')
+        assert len(solution) == 9
+        assert all(len(row) == 9 for row in solution)
 
     def test_generate_puzzle_has_empty_cells(self):
-        """Test that generated puzzle has empty cells."""
+        """Test that generated solution is complete (no empty cells)."""
         gen = SudokuGenerator(size=9)
-        puzzle = gen.generate_puzzle('medium')
-        empty_count = sum(row.count(0) for row in puzzle)
-        assert empty_count > 0
+        solution = gen.generate_puzzle('medium')
+        # New architecture: backend returns complete solutions
+        for row in solution:
+            for cell in row:
+                assert 1 <= cell <= 9
+        # Verify no empty cells
+        empty_count = sum(row.count(0) for row in solution)
+        assert empty_count == 0
 
     def test_difficulty_levels(self):
-        """Test different difficulty levels."""
+        """Test that different difficulty levels all return complete solutions."""
         gen = SudokuGenerator(size=9)
         easy = gen.generate_puzzle('easy')
         hard = gen.generate_puzzle('hard')
 
-        easy_empty = sum(row.count(0) for row in easy)
-        hard_empty = sum(row.count(0) for row in hard)
-
-        assert hard_empty > easy_empty
+        # Both should be complete solutions with no empty cells
+        for solution in [easy, hard]:
+            for row in solution:
+                for cell in row:
+                    assert 1 <= cell <= 9
+            empty_count = sum(row.count(0) for row in solution)
+            assert empty_count == 0
 
 
 class TestHexSudokuGenerator:
@@ -56,8 +64,9 @@ class TestHexSudokuGenerator:
 
 
 class TestSudokuValidator:
-    """Test standard Sudoku validator."""
+    """Test standard Sudoku validator - NOTE: Validation is now performed on frontend."""
 
+    @pytest.mark.skip(reason="Validation moved to frontend - validate_solution method no longer used")
     def test_valid_complete_solution(self):
         """Test validation of a complete valid solution."""
         validator = SudokuValidator(size=9)
@@ -89,6 +98,7 @@ class TestSudokuValidator:
 
         assert validator.validate_solution(puzzle_state, puzzle_solution) == True
 
+    @pytest.mark.skip(reason="Validation moved to frontend - validate_solution method no longer used")
     def test_invalid_solution_changed_clue(self):
         """Test that validator rejects solution with changed original clue."""
         validator = SudokuValidator(size=9)

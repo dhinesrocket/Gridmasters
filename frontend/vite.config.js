@@ -13,5 +13,15 @@ export default defineConfig({
       '/sudoku_hint': 'http://localhost:5000',
       '/hex_sudoku_hint': 'http://localhost:5000',
     }
+  },
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
+    }
   }
 })

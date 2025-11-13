@@ -28,9 +28,13 @@ class SudokuGenerator:
         return board
     def _create_solved_board(self):
         """Create a completely solved Sudoku board."""
-        board = [[0 for _ in range(self.size)] for _ in range(self.size)]
-        self._fill_board(board)
-        return board
+        max_attempts = 100
+        for _ in range(max_attempts):
+            board = [[0 for _ in range(self.size)] for _ in range(self.size)]
+            if self._fill_board(board):
+                return board
+        # If all attempts fail, raise an error
+        raise RuntimeError(f"Failed to generate valid Sudoku board after {max_attempts} attempts")
 
     def _fill_board(self, board, row=0, col=0):
         """Recursively fill the board using backtracking."""
@@ -123,9 +127,13 @@ class HexSudokuGenerator(SudokuGenerator):
 
     def _create_solved_board(self):
         """Create a completely solved Sudoku board using -1 for empty."""
-        board = [[-1 for _ in range(self.size)] for _ in range(self.size)]
-        self._fill_board(board)
-        return board
+        max_attempts = 100
+        for _ in range(max_attempts):
+            board = [[-1 for _ in range(self.size)] for _ in range(self.size)]
+            if self._fill_board(board):
+                return board
+        # If all attempts fail, raise an error
+        raise RuntimeError(f"Failed to generate valid hex Sudoku board after {max_attempts} attempts")
 
     def _remove_numbers(self, board, difficulty):
         """Remove numbers from solved board. Removed cells set to -1."""
