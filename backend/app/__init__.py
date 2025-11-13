@@ -11,7 +11,7 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024  # 16 KB max request size
     # Enable CORS
-    CORS(app, resources={r"/*": {"origins": "*"}}) 
+    CORS(app, resources={r"/*": {"origins": "*"}})
     # Setup logging
     if not app.debug and not os.environ.get("PYTEST_CURRENT_TEST"):
         if not os.path.exists('logs'):

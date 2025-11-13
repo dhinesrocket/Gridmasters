@@ -5,7 +5,9 @@ jobs=0
 
 [MESSAGES CONTROL]
 disable=
-    C0114,C0115,C0116  # docstrings
+    C0114,C0115,C0116,  # docstrings
+    W0718,              # Broad exception caught
+    R0903,              # Too few public methods
 
 [FORMAT]
 max-line-length=110

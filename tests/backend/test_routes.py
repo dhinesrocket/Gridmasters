@@ -1,10 +1,9 @@
-﻿import pytest
-import json
-
+﻿import json
+import pytest
 
 class TestSudokuPuzzleEndpoint:
     """Test GET /sudoku_puzzle endpoint."""
-    
+
     def test_get_sudoku_puzzle_default(self, client):
         """Test getting a puzzle with default difficulty."""
         response = client.get('/sudoku_puzzle')
@@ -13,7 +12,7 @@ class TestSudokuPuzzleEndpoint:
         assert 'puzzle' in data
         assert 'difficulty' in data
         assert data['size'] == 9
-    
+
     def test_get_sudoku_puzzle_with_difficulty(self, client):
         """Test getting puzzle with specified difficulty."""
         for difficulty in ['easy', 'medium', 'hard']:
@@ -21,7 +20,7 @@ class TestSudokuPuzzleEndpoint:
             assert response.status_code == 200
             data = json.loads(response.data)
             assert data['difficulty'] == difficulty
-    
+
     def test_get_sudoku_puzzle_invalid_difficulty(self, client):
         """Test invalid difficulty returns error."""
         response = client.get('/sudoku_puzzle?difficulty=invalid')
@@ -30,7 +29,7 @@ class TestSudokuPuzzleEndpoint:
 
 class TestHexSudokuPuzzleEndpoint:
     """Test GET /hex_sudoku_puzzle endpoint."""
-    
+
     def test_get_hex_sudoku_puzzle(self, client):
         """Test getting a hex puzzle."""
         response = client.get('/hex_sudoku_puzzle')
@@ -38,7 +37,7 @@ class TestHexSudokuPuzzleEndpoint:
         data = json.loads(response.data)
         assert 'puzzle' in data
         assert data['size'] == 16
-    
+
     def test_hex_puzzle_format(self, client):
         """Test that hex puzzle contains hex characters."""
         response = client.get('/hex_sudoku_puzzle')
@@ -51,7 +50,7 @@ class TestHexSudokuPuzzleEndpoint:
 
 class TestSudokuSolutionEndpoint:
     """Test POST /sudoku_solution endpoint."""
-    
+
     def test_validate_correct_solution(self, client):
         """Test validation of correct solution."""
         puzzle_state = [
@@ -65,7 +64,7 @@ class TestSudokuSolutionEndpoint:
             [0, 0, 0, 4, 1, 9, 0, 0, 5],
             [0, 0, 0, 0, 8, 0, 0, 7, 9]
         ]
-        
+
         puzzle_solution = [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [6, 7, 2, 1, 9, 5, 3, 4, 8],
@@ -77,7 +76,7 @@ class TestSudokuSolutionEndpoint:
             [2, 8, 7, 4, 1, 9, 6, 3, 5],
             [3, 4, 5, 2, 8, 6, 1, 7, 9]
         ]
-        
+
         response = client.post('/sudoku_solution',
                               data=json.dumps({
                                   'puzzle_state': puzzle_state,
@@ -87,14 +86,14 @@ class TestSudokuSolutionEndpoint:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['valid'] == True
-    
+
     def test_validate_missing_fields(self, client):
         """Test validation with missing fields."""
         response = client.post('/sudoku_solution',
                               data=json.dumps({'puzzle_state': []}),
                               content_type='application/json')
         assert response.status_code == 400
-    
+
     def test_validate_invalid_board_size(self, client):
         """Test validation with wrong board size."""
         response = client.post('/sudoku_solution',
@@ -108,14 +107,14 @@ class TestSudokuSolutionEndpoint:
 
 class TestHexSudokuSolutionEndpoint:
     """Test POST /hex_sudoku_solution endpoint."""
-    
+
     def test_validate_hex_solution_missing_fields(self, client):
         """Test hex solution validation with missing fields."""
         response = client.post('/hex_sudoku_solution',
                               data=json.dumps({'puzzle_state': []}),
                               content_type='application/json')
         assert response.status_code == 400
-    
+
     def test_validate_hex_solution_wrong_size(self, client):
         """Test hex solution validation with wrong size."""
         response = client.post('/hex_sudoku_solution',
@@ -129,7 +128,7 @@ class TestHexSudokuSolutionEndpoint:
 
 class TestSudokuHintEndpoint:
     """Test POST /sudoku_hint endpoint."""
-    
+
     def test_get_hint(self, client):
         """Test getting a hint."""
         puzzle = [
@@ -143,7 +142,7 @@ class TestSudokuHintEndpoint:
             [0, 0, 0, 4, 1, 9, 0, 0, 5],
             [0, 0, 0, 0, 8, 0, 0, 7, 9]
         ]
-        
+
         response = client.post('/sudoku_hint',
                               data=json.dumps({'puzzle': puzzle}),
                               content_type='application/json')
@@ -151,14 +150,14 @@ class TestSudokuHintEndpoint:
         data = json.loads(response.data)
         assert 'hint' in data
         assert 'cell_index' in data
-    
+
     def test_get_hint_missing_puzzle(self, client):
         """Test hint request without puzzle."""
         response = client.post('/sudoku_hint',
                               data=json.dumps({}),
                               content_type='application/json')
         assert response.status_code == 400
-    
+
     def test_get_hint_invalid_board(self, client):
         """Test hint with invalid board."""
         response = client.post('/sudoku_hint',
@@ -169,12 +168,12 @@ class TestSudokuHintEndpoint:
 
 class TestHexSudokuHintEndpoint:
     """Test POST /hex_sudoku_hint endpoint."""
-    
+
     def test_get_hex_hint(self, client):
         """Test getting a hex hint."""
         puzzle = [['0' for _ in range(16)] for _ in range(16)]
         puzzle[0][0] = '1'
-        
+
         response = client.post('/hex_sudoku_hint',
                               data=json.dumps({'puzzle': puzzle}),
                               content_type='application/json')
@@ -182,7 +181,7 @@ class TestHexSudokuHintEndpoint:
         data = json.loads(response.data)
         assert 'hint' in data
         assert 'cell_index' in data
-    
+
     def test_get_hex_hint_invalid_size(self, client):
         """Test hex hint with wrong size."""
         response = client.post('/hex_sudoku_hint',
@@ -193,7 +192,7 @@ class TestHexSudokuHintEndpoint:
 
 class TestHealthEndpoint:
     """Test health check endpoint."""
-    
+
     def test_health_check(self, client):
         """Test health check returns OK."""
         response = client.get('/health')

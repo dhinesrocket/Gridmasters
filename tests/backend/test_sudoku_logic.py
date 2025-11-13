@@ -5,30 +5,30 @@ from app.sudoku_validator import SudokuValidator, HexSudokuValidator
 
 class TestSudokuGenerator:
     """Test standard Sudoku generator."""
-    
+
     def test_generate_puzzle_size(self):
         """Test that generated puzzle has correct size."""
         gen = SudokuGenerator(size=9)
         puzzle = gen.generate_puzzle('medium')
         assert len(puzzle) == 9
         assert all(len(row) == 9 for row in puzzle)
-    
+
     def test_generate_puzzle_has_empty_cells(self):
         """Test that generated puzzle has empty cells."""
         gen = SudokuGenerator(size=9)
         puzzle = gen.generate_puzzle('medium')
         empty_count = sum(row.count(0) for row in puzzle)
         assert empty_count > 0
-    
+
     def test_difficulty_levels(self):
         """Test different difficulty levels."""
         gen = SudokuGenerator(size=9)
         easy = gen.generate_puzzle('easy')
         hard = gen.generate_puzzle('hard')
-        
+
         easy_empty = sum(row.count(0) for row in easy)
         hard_empty = sum(row.count(0) for row in hard)
-        
+
         assert hard_empty > easy_empty
 
 

@@ -159,7 +159,7 @@ class HexSudokuGenerator(SudokuGenerator):
                     hex_row.append(format(cell, 'X'))
             hex_board.append(hex_row)
         return hex_board
-    
+
     def generate_puzzle(self, difficulty='medium'):
         """Generate a hex sudoku puzzle."""
         # Create solved board (uses -1 for empty during generation)

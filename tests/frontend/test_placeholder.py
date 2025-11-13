@@ -8,7 +8,7 @@ import pytest
 
 class TestFrontendPlaceholder:
     """Placeholder test class for frontend."""
-    
+
     def test_frontend_structure(self):
         """Test that frontend structure exists."""
         import os
