@@ -16,17 +16,16 @@ class SudokuGenerator:
 
     def generate_puzzle(self, difficulty='medium'):
         """
-        Generate a complete Sudoku puzzle.
+        Generate a complete Sudoku solution.
         Args:
-            difficulty: 'easy', 'medium', or 'hard'
+            difficulty: 'easy', 'medium', or 'hard' (kept for API compatibility, not used)
         Returns:
-            2D list representing the puzzle
+            2D list representing the complete solved board
         """
-        # Create a complete solved board
+        # Create and return a complete solved board
+        # Frontend will handle removing numbers based on difficulty
         board = self._create_solved_board()
-        # Remove numbers based on difficulty
-        puzzle = self._remove_numbers(board, difficulty)
-        return puzzle
+        return board
     def _create_solved_board(self):
         """Create a completely solved Sudoku board."""
         board = [[0 for _ in range(self.size)] for _ in range(self.size)]
@@ -146,14 +145,14 @@ class HexSudokuGenerator(SudokuGenerator):
 
     def _convert_to_hex(self, board):
         """Convert numeric board to hex representation.
-        Maps: -1 -> '0' (empty), 0-15 -> '0'-'9', 'A'-'F'
+        Maps: -1 -> -1 (empty), 0-15 -> '0'-'9', 'A'-'F'
         """
         hex_board = []
         for row in board:
             hex_row = []
             for cell in row:
                 if cell == -1:
-                    hex_row.append('0')  # Empty cell
+                    hex_row.append(-1)  # Empty cell stays -1
                 else:
                     # Convert 0-15 to '0'-'9', 'A'-'F'
                     hex_row.append(format(cell, 'X'))
@@ -161,10 +160,9 @@ class HexSudokuGenerator(SudokuGenerator):
         return hex_board
 
     def generate_puzzle(self, difficulty='medium'):
-        """Generate a hex sudoku puzzle."""
+        """Generate a complete hex sudoku solution."""
         # Create solved board (uses -1 for empty during generation)
         board = self._create_solved_board()
-        # Remove numbers to create puzzle
-        puzzle = self._remove_numbers(board, difficulty)
-        # Convert to hex representation (maps -1 to '0' for empty)
-        return self._convert_to_hex(puzzle)
+        # Convert to hex representation
+        # Frontend will handle removing numbers based on difficulty
+        return self._convert_to_hex(board)

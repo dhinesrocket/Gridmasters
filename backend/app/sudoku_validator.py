@@ -1,4 +1,16 @@
-﻿class SudokuValidator:
+﻿"""
+DEPRECATION NOTICE:
+This module is no longer used by the backend API as validation is now performed on the frontend.
+The backend only generates complete Sudoku solutions, and the frontend handles:
+- Hiding cells based on difficulty
+- Validating user input against the known solution
+- Providing hints
+
+This file is kept for reference or potential future use.
+"""
+
+
+class SudokuValidator:
     """Validate Sudoku puzzles and solutions."""
 
     def __init__(self, size=9):
@@ -9,29 +21,6 @@
         """
         self.size = size
         self.box_size = int(size ** 0.5)
-
-    def validate_solution(self, puzzle_state, puzzle_solution):
-        """
-        Validate a puzzle solution.
-        Args:
-            puzzle_state: Original puzzle with some cells filled
-            puzzle_solution: User's completed solution
-        Returns:
-            bool: True if solution is valid, False otherwise
-        """
-        # Check dimensions
-        if not self._check_dimensions(puzzle_solution):
-            return False
-
-        # Check that original clues are maintained
-        if not self._check_original_clues(puzzle_state, puzzle_solution):
-            return False
-
-        # Check all rows, columns, and boxes
-        if not self._check_all_constraints(puzzle_solution):
-            return False
-
-        return True
 
     def _check_dimensions(self, board):
         """Check if board has correct dimensions."""
@@ -133,14 +122,6 @@ class HexSudokuValidator(SudokuValidator):
 
     def __init__(self):
         super().__init__(size=16)
-
-    def validate_solution(self, puzzle_state, puzzle_solution):
-        """Validate hex Sudoku solution."""
-        # Convert hex to numeric
-        numeric_state = self._convert_from_hex(puzzle_state)
-        numeric_solution = self._convert_from_hex(puzzle_solution)
-
-        return super().validate_solution(numeric_state, numeric_solution)
 
     def get_hint(self, puzzle):
         """Generate hint for hex Sudoku."""

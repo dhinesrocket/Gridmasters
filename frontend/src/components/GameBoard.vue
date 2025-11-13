@@ -43,10 +43,10 @@
     
     <div class="board-legend">
       <p v-if="gameMode === 'standard'">
-        &gt; Enter numbers 1-9 | 0 = empty cell
+        &gt; Enter numbers 1-9 | Clear cell to delete
       </p>
       <p v-else>
-        &gt; Enter hex values 0-9, A-F | 0 = empty cell
+        &gt; Enter hex values 0-9, A-F | Clear cell to delete
       </p>
     </div>
   </div>
@@ -76,11 +76,11 @@ export default {
   emits: ['cell-update', 'validate', 'hint', 'reset'],
   methods: {
     isInitialCell(row, col) {
-      return this.initialPuzzle[row][col] !== 0 && this.initialPuzzle[row][col] !== '0'
+      return this.initialPuzzle[row][col] !== -1
     },
     
     getCellDisplay(cell) {
-      if (cell === 0 || cell === '0') return ''
+      if (cell === -1) return ''
       return cell
     },
     
@@ -88,18 +88,20 @@ export default {
       const value = event.target.value.toUpperCase()
       
       if (this.gameMode === 'standard') {
-        // Standard mode: only accept 0-9
-        if (value === '' || /^[0-9]$/.test(value)) {
-          const numValue = value === '' ? 0 : parseInt(value)
-          this.$emit('cell-update', { row, col, value: numValue })
+        // Standard mode: only accept 1-9
+        if (value === '') {
+          this.$emit('cell-update', { row, col, value: -1 })
+        } else if (/^[1-9]$/.test(value)) {
+          this.$emit('cell-update', { row, col, value: parseInt(value) })
         } else {
           event.target.value = this.getCellDisplay(this.puzzle[row][col])
         }
       } else {
         // Hex mode: accept 0-9, A-F
-        if (value === '' || /^[0-9A-F]$/.test(value)) {
-          const hexValue = value === '' ? '0' : value
-          this.$emit('cell-update', { row, col, value: hexValue })
+        if (value === '') {
+          this.$emit('cell-update', { row, col, value: -1 })
+        } else if (/^[0-9A-F]$/.test(value)) {
+          this.$emit('cell-update', { row, col, value: value })
         } else {
           event.target.value = this.getCellDisplay(this.puzzle[row][col])
         }
@@ -129,6 +131,10 @@ export default {
 <style scoped>
 .game-board-container {
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .board-controls {
@@ -136,6 +142,7 @@ export default {
   gap: 15px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .control-btn {
@@ -244,6 +251,8 @@ export default {
   padding: 10px;
   border-left: 2px solid #00ff00;
   background: rgba(0, 255, 0, 0.03);
+  text-align: center;
+  max-width: 500px;
 }
 
 .board-legend p {
