@@ -3,8 +3,8 @@
 
 console.log('=== Token Tracking Calculation Tests ===\n');
 
-const ML_PER_TOKEN = 0.003816;
-const BOTTLE_CAPACITY = 500;
+const ML_PER_TOKEN = 0.03816;
+const BOTTLE_CAPACITY = 100;
 
 function calculateBottleStats(tokensUsed) {
   const totalMl = tokensUsed * ML_PER_TOKEN;

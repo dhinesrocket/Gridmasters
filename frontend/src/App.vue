@@ -39,8 +39,8 @@
         <WaterBottle 
           v-if="gameStarted"
           :tokensUsed="tokensUsed" 
-          :mlPerToken="0.003816"
-          :bottleCapacity="500"
+          :mlPerToken="0.03816"
+          :bottleCapacity="100"
         />
       </div>
       
@@ -147,7 +147,7 @@ import GameBoard from './components/GameBoard.vue'
 import WaterBottle from './components/WaterBottle.vue'
 import EmptyBottles from './components/EmptyBottles.vue'
 import { sudokuApi } from './services/api'
-import { hideCells, validateBoard, getHint, isBoardComplete } from './utils/sudokuUtils'
+import { hideCells, validateBoard, isBoardComplete, getHint } from './utils/sudokuUtils'
 
 export default {
   name: 'App',
@@ -270,15 +270,15 @@ export default {
       }
     }
     
-    const getHintLocal = () => {
+    const getHintLocal = async () => {
       loading.value = true
       message.value = 'user@gridmasters:~$ ./get-hint'
       messageType.value = 'info'
-      
+
       try {
         // Get hint from stored solution
-        const hint = getHint(puzzle.value, solution.value, gameMode.value)
-        
+        const hint = await getHint(puzzle.value, solution.value, WaterBottle)
+
         if (hint.row === -1) {
           // No valid hint available (e.g., puzzle is complete)
           // Don't count tokens
@@ -290,15 +290,15 @@ export default {
           // Example:
           // const llmResponse = await callLLMApi(puzzle.value, solution.value)
           // addTokens(llmResponse.tokensUsed)
-          
+
           // For now, simulate token usage for demonstration
           // Remove this when actual LLM integration is implemented
           const simulatedTokens = Math.floor(Math.random() * 100) + 50 // 50-150 tokens
           addTokens(simulatedTokens)
-          
+
           message.value = `user@gridmasters:~$ ./get-hint\n${hint.message}`
           messageType.value = 'hint'
-          
+
           // Optionally reveal the cell (uncomment to auto-fill)
           // puzzle.value[hint.row][hint.col] = hint.value
         }
