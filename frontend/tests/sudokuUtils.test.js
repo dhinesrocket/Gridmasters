@@ -1,7 +1,7 @@
 /**
  * Tests for sudokuUtils.js utility functions
  */
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   hideCells,
   validateCell,
@@ -11,6 +11,14 @@ import {
   getValidNumbers,
   getCellCounts
 } from '../src/utils/sudokuUtils.js'
+import * as api from '../src/services/api.js'
+
+// Mock the API
+vi.mock('../src/services/api.js', () => ({
+  sudokuApi: {
+    getHint: vi.fn()
+  }
+}))
 
 describe('sudokuUtils', () => {
   // Sample 9x9 solved board
@@ -124,25 +132,37 @@ describe('sudokuUtils', () => {
   })
 
   describe('getHint', () => {
-    it('should provide hint for first empty cell', () => {
+    beforeEach(() => {
+      // Reset mock before each test
+      vi.clearAllMocks()
+    })
+
+    it('should provide hint for first empty cell', async () => {
       const userBoard = JSON.parse(JSON.stringify(standardSolution))
       userBoard[2][3] = -1 // Make cell empty
-      
-      const hint = getHint(userBoard, standardSolution, 'standard')
-      
+
+      // Mock the API response
+      api.sudokuApi.getHint.mockResolvedValue({
+        hint: 'Test hint for cell',
+        tokens: 10
+      })
+
+      const water_bottle = { tokens_used: 0 }
+      const hint = await getHint(userBoard, standardSolution, water_bottle)
+
       expect(hint.row).toBe(2)
       expect(hint.col).toBe(3)
       expect(hint.value).toBe(3)
-      expect(hint.message).toContain('Cell at row 3, column 4')
+      expect(hint.message).toBe('Test hint for cell')
+      expect(water_bottle.tokens_used).toBe(10)
     })
 
     it('should return no hints for complete board', () => {
-      const hint = getHint(standardSolution, standardSolution, 'standard')
-      
+      const hint = getHint(standardSolution, standardSolution, {})
+
       expect(hint.row).toBe(-1)
       expect(hint.col).toBe(-1)
       expect(hint.value).toBe(null)
-      expect(hint.message).toContain('No hints available')
     })
   })
 

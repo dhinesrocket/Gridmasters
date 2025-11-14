@@ -1,14 +1,29 @@
+import os
 import traceback
 from flask import Blueprint, request, jsonify, current_app
+from openai import OpenAI  # pylint: disable=import-error
+
 from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
-from openai import OpenAI
 
 bp = Blueprint('api', __name__)
 
 # Initialize generators
 sudoku_gen = SudokuGenerator(size=9)
 hex_sudoku_gen = HexSudokuGenerator()
-open_ai = OpenAI()
+
+# Initialize OpenAI client lazily to avoid requiring API key during import
+_OPENAI_CLIENT = None
+
+
+def get_openai_client():
+    """Get or create OpenAI client instance."""
+    global _OPENAI_CLIENT  # pylint: disable=global-statement
+    if _OPENAI_CLIENT is None:
+        # Check if we're in test mode
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if api_key or not os.environ.get('PYTEST_CURRENT_TEST'):
+            _OPENAI_CLIENT = OpenAI(api_key=api_key or 'test-key-for-testing')
+    return _OPENAI_CLIENT
 
 
 @bp.route('/sudoku_puzzle', methods=['GET'])
@@ -85,14 +100,18 @@ def get_hint():
         return jsonify({"error": "Number parameter is required"}), 400
     try:
         number = int(number)
-        if not (1 <= number <= 9):
+        if not 1 <= number <= 9:
             return jsonify({"error": "Number must be between 1 and 9"}), 400
-        
+
+        open_ai = get_openai_client()
+        if not open_ai:
+            return jsonify({"error": "OpenAI client not configured"}), 503
+
         response = open_ai.responses.create(
             model="gpt-4o",
             input=f"""
             Role: You are a Sudoku Riddle Master.
-            Goal: Provide an easy riddle where the answer is the given number. The number is from a game of either regular Sudoku, or Hexadecimal Sudoku. 
+            Goal: Provide an easy riddle where the answer is the given number. The number is from a game of either regular Sudoku, or Hexadecimal Sudoku.
             Input: {number}
             Output: A hint of no more than 3 sentences, which guides the player to the correct number to place into the given spot.
             """
@@ -106,7 +125,7 @@ def get_hint():
             "hint": hint,
             "tokents": response.usage.total_tokens
         }), 200
-    
+
     except ValueError:
         return jsonify({"error": "Number must be an integer"}), 400
     except Exception as e:

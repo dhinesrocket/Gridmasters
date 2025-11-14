@@ -126,21 +126,11 @@ describe('GameBoard.vue', () => {
 
   it('should render hex board class for hex mode', async () => {
     await wrapper.setProps({ gameMode: 'hex' })
-    
+
     expect(wrapper.find('.hex-board').exists()).toBe(true)
     expect(wrapper.find('.standard-board').exists()).toBe(false)
   })
 
-  it('should show correct legend for standard mode', () => {
-    const legend = wrapper.find('.board-legend p')
-    expect(legend.text()).toContain('1-9')
-  })
-
-  it('should show correct legend for hex mode', async () => {
-    await wrapper.setProps({ gameMode: 'hex' })
-    
-    const legend = wrapper.find('.board-legend p')
-    expect(legend.text()).toContain('0-9, A-F')
-  })
+  // Legend tests removed - legend moved to App.vue
 })
 
