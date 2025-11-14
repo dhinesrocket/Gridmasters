@@ -3,6 +3,8 @@
  * Frontend handles all validation since backend only provides complete solutions.
  */
 
+import { sudokuApi } from "../services/api"
+
 /**
  * Hide cells in a complete solution based on difficulty level
  * @param {Array} solution - Complete solved Sudoku board
@@ -123,7 +125,7 @@ export function isBoardComplete(board, gameMode) {
  * @param {string} gameMode - 'standard' or 'hex'
  * @returns {Object} Hint object with row, col, value, and message
  */
-export function getHint(userBoard, solution, gameMode) {
+export function getHint(userBoard, solution, water_bottle) {
   const emptyValue = -1  // Use -1 for empty cells
   
   // Find first empty cell
@@ -131,22 +133,24 @@ export function getHint(userBoard, solution, gameMode) {
     for (let col = 0; col < userBoard[row].length; col++) {
       if (userBoard[row][col] === emptyValue) {
         const value = solution[row][col]
-        return {
-          row,
-          col,
-          value,
-          message: `Cell at row ${row + 1}, column ${col + 1} should be ${value}`
-        }
+        return sudokuApi.getHint(value).then(data => {
+          water_bottle.tokens_used += data.tokens
+          return {
+            row,
+            col,
+            value,
+            message: data.hint
+          }
+        })
       }
     }
   }
-  
+
   // No empty cells found
   return {
     row: -1,
     col: -1,
     value: null,
-    message: 'No hints available - all cells are filled!'
   }
 }
 

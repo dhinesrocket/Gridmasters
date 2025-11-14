@@ -1,12 +1,14 @@
 import traceback
 from flask import Blueprint, request, jsonify, current_app
 from app.sudoku_generator import SudokuGenerator, HexSudokuGenerator
+from openai import OpenAI
 
 bp = Blueprint('api', __name__)
 
 # Initialize generators
 sudoku_gen = SudokuGenerator(size=9)
 hex_sudoku_gen = HexSudokuGenerator()
+open_ai = OpenAI()
 
 
 @bp.route('/sudoku_puzzle', methods=['GET'])
@@ -66,6 +68,49 @@ def get_hex_sudoku_puzzle():
 
     except Exception as e:
         current_app.logger.error(f"Error generating hex sudoku solution: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@bp.route('/hint', methods=['GET'])
+def get_hint():
+    """
+    GET hint
+    Takes in an integer and returns an llm-generated hint for solving the Sudoku puzzle.
+    Query params:
+        puzzle_solution: A 2D list representing the Sudoku solution.
+        target_cell: A tuple (row, col) indicating the cell for which the hint is requested.
+    """
+    number = request.args.get('number', None)
+    if number is None:
+        return jsonify({"error": "Number parameter is required"}), 400
+    try:
+        number = int(number)
+        if not (1 <= number <= 9):
+            return jsonify({"error": "Number must be between 1 and 9"}), 400
+        
+        response = open_ai.responses.create(
+            model="gpt-4o",
+            input=f"""
+            Role: You are a Sudoku Riddle Master.
+            Goal: Provide an easy riddle where the answer is the given number. The number is from a game of either regular Sudoku, or Hexadecimal Sudoku. 
+            Input: {number}
+            Output: A hint of no more than 3 sentences, which guides the player to the correct number to place into the given spot.
+            """
+        )
+
+        hint = response.output_text
+
+        current_app.logger.info(f"Generated hint for number: {number}")
+
+        return jsonify({
+            "hint": hint,
+            "tokents": response.usage.total_tokens
+        }), 200
+    
+    except ValueError:
+        return jsonify({"error": "Number must be an integer"}), 400
+    except Exception as e:
+        current_app.logger.error(f"Error generating hint: {str(e)}\n{traceback.format_exc()}")
         return jsonify({"error": "Internal server error"}), 500
 
 

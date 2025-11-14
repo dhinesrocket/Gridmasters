@@ -30,11 +30,11 @@ export default {
     },
     mlPerToken: {
       type: Number,
-      default: 0.003816
+      default: 0.03816
     },
     bottleCapacity: {
       type: Number,
-      default: 500
+      default: 100
     }
   },
   computed: {
